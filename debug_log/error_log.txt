@@ -1,0 +1,148 @@
+[Taichi] version 1.0.3, llvm 10.0.0, commit fae94a21, win, python 3.9.0
+[Taichi] Starting on arch=cuda
+100000
+C:\Python39\lib\site-packages\taichi\__init__.py:69: DeprecationWarning: ti.ext_arr is deprecated. Please use ti.types.ndarray instead.
+  warnings.warn(
+Loading presets...this might take a minute
+[I 06/15/22 18:10:51.206 18624] [D:/a/taichi/taichi/taichi/backends/vulkan/vulkan_device_creator.cpp:pick_physical_device@364] Found Vulkan Device 0 (NVIDIA GeForce RTX 2060)      
+[I 06/15/22 18:10:51.206 18624] [D:/a/taichi/taichi/taichi/backends/vulkan/vulkan_device_creator.cpp:find_queue_families@142] Async compute queue 2, graphics queue 0
+[I 06/15/22 18:10:51.206 18624] [D:/a/taichi/taichi/taichi/backends/vulkan/vulkan_device_creator.cpp:find_queue_families@142] Async compute queue 2, graphics queue 0
+[I 06/15/22 18:10:51.207 18624] [D:/a/taichi/taichi/taichi/backends/vulkan/vulkan_device_creator.cpp:create_logical_device@432] Vulkan Device "NVIDIA GeForce RTX 2060" supports Vulkan 0 version 1.2.186
+cube...
+chuitiliu
+256
+start running...
+Taichi JIT:0: allocate_from_buffer: block: [0,0,0], thread: [0,0,0] Assertion `Out of CUDA pre-allocated memory.
+Consider using ti.init(device_memory_fraction=0.9) or ti.init(device_memory_GB=4) to allocate more GPU memory` failed.
+[E 06/15/22 18:21:59.196 18624] [taichi/backends/cuda/cuda_driver.h:operator()@87] CUDA Error CUDA_ERROR_ASSERT: device-side assert triggered while calling stream_synchronize (cuStreamSynchronize)
+
+
+***********************************
+* Taichi Compiler Stack Traceback *
+***********************************
+0x7ffddb1fd4fd: taichi::Time::get_cycles in taichi_core.cp39-win_amd64.pyd
+0x7ffddb1ea660: taichi::lang::gfx::GfxRuntime::get_root_buffer_size in taichi_core.cp39-win_amd64.pyd
+0x7ffddb1ea643: taichi::lang::gfx::GfxRuntime::get_root_buffer_size in taichi_core.cp39-win_amd64.pyd
+0x7ffddb1ea5d7: taichi::lang::gfx::GfxRuntime::get_root_buffer_size in taichi_core.cp39-win_amd64.pyd
+0x7ffddaf4f2da: pybind11::error_already_set::trace in taichi_core.cp39-win_amd64.pyd      
+0x7ffddafbfc6c: taichi::Logger::error in taichi_core.cp39-win_amd64.pyd
+0x7ffddb091803: pybind11::import_error::~import_error in taichi_core.cp39-win_amd64.pyd   
+0x7ffddb0916fc: pybind11::import_error::~import_error in taichi_core.cp39-win_amd64.pyd   
+0x7ffddb093851: pybind11::import_error::~import_error in taichi_core.cp39-win_amd64.pyd   
+0x7ffddb1f6509: taichi::lang::MemoryPool::~MemoryPool in taichi_core.cp39-win_amd64.pyd   
+0x7ffddb1f5de6: taichi::lang::MemoryPool::~MemoryPool in taichi_core.cp39-win_amd64.pyd   
+0x7ffddb091b51: pybind11::import_error::~import_error in taichi_core.cp39-win_amd64.pyd   
+0x7ffddb093790: pybind11::import_error::~import_error in taichi_core.cp39-win_amd64.pyd   
+0x7ffddb0db8bf: taichi::lang::Program::add_snode_tree in taichi_core.cp39-win_amd64.pyd   
+0x7ffddb4f2ff7: PyInit_taichi_core in taichi_core.cp39-win_amd64.pyd
+0x7ffddb4f2f91: PyInit_taichi_core in taichi_core.cp39-win_amd64.pyd
+0x7ffddb4f2aeb: PyInit_taichi_core in taichi_core.cp39-win_amd64.pyd
+0x7ffddb4f297c: PyInit_taichi_core in taichi_core.cp39-win_amd64.pyd
+0x7ffddb4f28bf: PyInit_taichi_core in taichi_core.cp39-win_amd64.pyd
+0x7ffddb3d4a58: PyInit_taichi_core in taichi_core.cp39-win_amd64.pyd
+0x7ffde68c29da: PyDict_MergeFromSeq2 in python39.dll
+0x7ffde68f410c: PyObject_MakeTpCall in python39.dll
+0x7ffde6973047: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6ff5a: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d8db7: Py_gitversion in python39.dll
+0x7ffde6897ac3: PyObject_GC_Del in python39.dll
+0x7ffde6892e14: PyLong_AsDouble in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6fea2: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d9fa7: Py_gitversion in python39.dll
+0x7ffde6897ac3: PyObject_GC_Del in python39.dll
+0x7ffde6892e14: PyLong_AsDouble in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6fea2: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d9fa7: Py_gitversion in python39.dll
+0x7ffde6899624: PyFunction_Vectorcall in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6fea2: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d8db7: Py_gitversion in python39.dll
+0x7ffde6899624: PyFunction_Vectorcall in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6fea2: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d9264: Py_gitversion in python39.dll
+0x7ffde6897ac3: PyObject_GC_Del in python39.dll
+0x7ffde6892e14: PyLong_AsDouble in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6fea2: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d9fa7: Py_gitversion in python39.dll
+0x7ffde6897ac3: PyObject_GC_Del in python39.dll
+0x7ffde6899707: PyFunction_Vectorcall in python39.dll
+0x7ffde6892e9f: PyLong_AsDouble in python39.dll
+0x7ffde68b9bb0: PyVectorcall_Call in python39.dll
+0x7ffde68b9a92: PyObject_Call in python39.dll
+0x7ffde68a07f7: PyEval_EvalFrameDefault in python39.dll
+0x7ffde6897ac3: PyObject_GC_Del in python39.dll
+0x7ffde6899707: PyFunction_Vectorcall in python39.dll
+0x7ffde68f3757: PyObject_FastCallDictTstate in python39.dll
+0x7ffde697fc90: PyObject_Call_Prepend in python39.dll
+0x7ffde697fbec: PyObject_SelfIter in python39.dll
+0x7ffde68b9afb: PyObject_Call in python39.dll
+0x7ffde68a07f7: PyEval_EvalFrameDefault in python39.dll
+0x7ffde6897ac3: PyObject_GC_Del in python39.dll
+0x7ffde6899707: PyFunction_Vectorcall in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6fea2: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d990e: Py_gitversion in python39.dll
+0x7ffde6899624: PyFunction_Vectorcall in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6fea2: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d990e: Py_gitversion in python39.dll
+0x7ffde6897ac3: PyObject_GC_Del in python39.dll
+0x7ffde6892e14: PyLong_AsDouble in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6fea2: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d9fa7: Py_gitversion in python39.dll
+0x7ffde6899624: PyFunction_Vectorcall in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6fea2: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d990e: Py_gitversion in python39.dll
+0x7ffde6897ac3: PyObject_GC_Del in python39.dll
+0x7ffde6883089: PyEval_EvalCodeWithName in python39.dll
+0x7ffde6882fcb: PyEval_EvalCodeEx in python39.dll
+0x7ffde6882f29: PyEval_EvalCode in python39.dll
+0x7ffde68831e2: PyEval_EvalCodeWithName in python39.dll
+0x7ffde68830eb: PyEval_EvalCodeWithName in python39.dll
+0x7ffde68d909b: PyObject_GetBuffer in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6ff5a: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d990e: Py_gitversion in python39.dll
+0x7ffde6897ac3: PyObject_GC_Del in python39.dll
+0x7ffde6899707: PyFunction_Vectorcall in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6fea2: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d990e: Py_gitversion in python39.dll
+0x7ffde6897ac3: PyObject_GC_Del in python39.dll
+0x7ffde6899707: PyFunction_Vectorcall in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde6a6fea2: Py_FatalError_TstateNULL in python39.dll
+0x7ffde69d9fa7: Py_gitversion in python39.dll
+0x7ffde6897ac3: PyObject_GC_Del in python39.dll
+0x7ffde6899707: PyFunction_Vectorcall in python39.dll
+0x7ffde697300c: PyToken_TwoChars in python39.dll
+0x7ffde6a6ef37: PyEval_ThreadsInitialized in python39.dll
+0x7ffde69743a1: Py_RunMain in python39.dll
+0x7ffde697434d: Py_Main in python39.dll
+0x7ff7d4fa1258: Unknown Function in python.exe
+0x7ffe51e554e0: BaseThreadInitThunk in KERNEL32.DLL
+0x7ffe5372485b: RtlUserThreadStart in ntdll.dll
+
+Internal error occurred. Check out this page for possible solutions:
+https://docs.taichi-lang.org/docs/install
+
+

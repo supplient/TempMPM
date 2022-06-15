@@ -1,0 +1,53 @@
+[Taichi] version 1.0.3, llvm 10.0.0, commit fae94a21, win, python 3.9.0
+[Taichi] Starting on arch=vulkan
+[I 06/15/22 19:51:34.554 18976] [D:/a/taichi/taichi/taichi/backends/vulkan/vulkan_device_creator.cpp:pick_physical_device@364] Found Vulkan Device 0 (NVIDIA GeForce RTX 2060)    
+[I 06/15/22 19:51:34.555 18976] [D:/a/taichi/taichi/taichi/backends/vulkan/vulkan_device_creator.cpp:find_queue_families@142] Async compute queue 2, graphics queue 0
+[I 06/15/22 19:51:34.555 18976] [D:/a/taichi/taichi/taichi/backends/vulkan/vulkan_device_creator.cpp:find_queue_families@142] Async compute queue 2, graphics queue 0
+[I 06/15/22 19:51:34.555 18976] [D:/a/taichi/taichi/taichi/backends/vulkan/vulkan_device_creator.cpp:create_logical_device@432] Vulkan Device "NVIDIA GeForce RTX 2060" supports Vulkan 0 version 1.2.186
+100000
+C:\Python39\lib\site-packages\taichi\__init__.py:69: DeprecationWarning: ti.ext_arr is deprecated. Please use ti.types.ndarray instead.
+  warnings.warn(
+Loading presets...this might take a minute
+cube...
+chuitiliu
+256
+start running...
+[W 06/15/22 20:16:19.152 18976] [D:/a/taichi/taichi/taichi/backends/vulkan/vulkan_device.cpp:buffer@615] Overriding last binding
+[W 06/15/22 20:16:19.161 18976] [D:/a/taichi/taichi/taichi/backends/vulkan/vulkan_device.cpp:buffer@615] Overriding last binding
+Assertion failed: m_pMetadata->IsEmpty() && "Some allocations were not freed before destruction of this memory block!", file D:/a/taichi/taichi/external/VulkanMemoryAllocator/include\vk_mem_alloc.h, line 11799
+[E 06/15/22 20:24:51.696 18976] Received signal 22 (SIGABRT)
+
+
+***********************************
+* Taichi Compiler Stack Traceback *
+***********************************
+0x7ffde158d4fd: taichi::Time::get_cycles in taichi_core.cp39-win_amd64.pyd
+0x7ffde157a660: taichi::lang::gfx::GfxRuntime::get_root_buffer_size in taichi_core.cp39-win_amd64.pyd
+0x7ffde157a643: taichi::lang::gfx::GfxRuntime::get_root_buffer_size in taichi_core.cp39-win_amd64.pyd
+0x7ffde157a5d7: taichi::lang::gfx::GfxRuntime::get_root_buffer_size in taichi_core.cp39-win_amd64.pyd
+0x7ffde12df2da: pybind11::error_already_set::trace in taichi_core.cp39-win_amd64.pyd     
+0x7ffde134fc6c: taichi::Logger::error in taichi_core.cp39-win_amd64.pyd
+0x7ffde1579f9e: taichi::lang::gfx::GfxRuntime::get_root_buffer_size in taichi_core.cp39-win_amd64.pyd
+0x7ffe50dfcd84: raise in ucrtbase.dll
+0x7ffe50dfdd61: abort in ucrtbase.dll
+0x7ffe50dff7ea: get_wpgmptr in ucrtbase.dll
+0x7ffe50dff6e1: get_wpgmptr in ucrtbase.dll
+0x7ffe50dff981: wassert in ucrtbase.dll
+0x7ffde1a394b6: taichi::lang::vulkan::VulkanLoader::load_function in taichi_core.cp39-win_amd64.pyd
+0x7ffde1a3ab9f: taichi::lang::vulkan::VulkanLoader::load_function in taichi_core.cp39-win_amd64.pyd
+0x7ffde1a3da20: taichi::lang::vulkan::VulkanLoader::load_function in taichi_core.cp39-win_amd64.pyd
+0x7ffde1a3d870: taichi::lang::vulkan::VulkanLoader::load_function in taichi_core.cp39-win_amd64.pyd
+0x7ffde1a40958: taichi::lang::vulkan::VulkanLoader::load_function in taichi_core.cp39-win_amd64.pyd
+0x7ffde1a409a9: taichi::lang::vulkan::VulkanLoader::load_function in taichi_core.cp39-win_amd64.pyd
+0x7ffde19361cc: taichi::lang::vulkan::VulkanDevice::~VulkanDevice in taichi_core.cp39-win_amd64.pyd
+0x7ffde193c505: taichi::lang::vulkan::VulkanDevice::destroy_image in taichi_core.cp39-win_amd64.pyd
+0x7ffde124c4b3: taichi::lang::DeviceAllocationGuard::DeviceAllocationGuard in taichi_core.cp39-win_amd64.pyd
+0x7ffde128e2c3: taichi::lang::Program::get_next_global_id in taichi_core.cp39-win_amd64.pyd
+0x7ffde1951bf9: taichi::lang::vulkan::VulkanDeviceCreator::~VulkanDeviceCreator in taichi_core.cp39-win_amd64.pyd
+0x7ffde16af722: taichi::ui::vulkan::AppContext::requires_export_sharing in taichi_core.cp39-win_amd64.pyd
+0x7ffdea10434d: Py_Main in python39.dll
+0x7ff7d4fa1258: Unknown Function in python.exe
+0x7ffe51e554e0: BaseThreadInitThunk in KERNEL32.DLL
+0x7ffe5372485b: RtlUserThreadStart in ntdll.dll
+
+Internal error occurred. Check out this page for possible solutions:https://docs.taichi-lang.org/docs/install
