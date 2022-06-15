@@ -939,30 +939,45 @@ def render():
     canvas.scene(scene)
 
 
+from MySimpleTimer import MySimpleTimer
+timer = MySimpleTimer()
+
+timer.tick()
 init_mytool()
+print("init_mytool():", str(timer.tick()))
 init_triangle()
+print("init_triangle():", str(timer.tick()))
 init_rigid_particles()
-# init_cubetool()
+print("init_rigid_particles():", str(timer.tick()))
+
 print("cube...")
 init_texture()
+print("init_texture():", str(timer.tick()))
 init_box()
-# init_chuitiliu()
+print("init_box():", str(timer.tick()))
+
 print("chuitiliu")
 init_uv()
+print("init_uv():", str(timer.tick()))
 read_MCTable()
+print("read_MCTable():", str(timer.tick()))
 rigid_move[None] = ti.Vector([0.0, -2.0, 0.0])
+print("rigid_move[None] = ti.Vector([0.0, -2.0, 0.0]):", str(timer.tick()))
+
 print("start running...")
-# compute_implicit_face()
-# implicit_to_explicit()
 while window.running:
     compute_implicit_face()
+    print("compute_implicit_face():", str(timer.tick()))
     implicit_to_explicit()
+    print("implicit_to_explicit():", str(timer.tick()))
     if not paused:
         for s in range(steps):
             substep(g_x, g_y, g_z)
+            print("substep(g_x, g_y, g_z):", str(timer.tick()))
     render()
-    # window.write_image(f"images/{frame_id:05d}.png")
+    print("render():", str(timer.tick()))
     window.show()
+    print("window.show():", str(timer.tick()))
     if frame_id == 300:
         rigid_move[None] = ti.Vector([0.0, 0.0, 0.0])
     if frame_id == 550 :
