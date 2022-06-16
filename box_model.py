@@ -1,4 +1,5 @@
 import taichi as ti
+import numpy as np
 
 arch = ti.vulkan if ti._lib.core.with_vulkan() else ti.cuda
 ti.init(arch)
@@ -426,18 +427,23 @@ def init_box():
         x[p] = [ti.random()*0.2 + 0.3, ti.random()*0.2 + 0.3,ti.random()*0.2 + 0.3]
 
 def init_texture():
-    global texture_xmin, texture_xmax, texture_zmax, texture_zmin, texture_ymin, texture_ymax
-    # texture_file = "../datas/box_zhao_rgb.txt"
     texture_file =  "./box_zhao_rgb.txt"
     f = open(texture_file)
+
+    # For efficiency, first save all data into CPU memory
+    cpu_texture = np.empty((texture.shape[0], 4), np.float32)
     index_t = 0
-    for line in f:
+    lines = f.readlines()
+    for line in lines:
         temp = line.split()
         r = float(temp[0])
         g = float(temp[1])
         b = float(temp[2])
-        texture[index_t] = [r, g, b, 1.0]
+        cpu_texture[index_t] = [r, g, b, 1.0]
         index_t += 1
+    
+    # Then copy from CPU to GPU
+    texture.from_numpy(cpu_texture)
 
 @ti.kernel
 def init_uv():
