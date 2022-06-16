@@ -14,7 +14,8 @@ n_grid = 100
 steps = 5
 dt = 2e-4
 
-n_particles = 100000
+# n_particles = 100000
+n_particles = 10000
 print(n_particles)
 
 dx = 1 / n_grid
@@ -767,9 +768,7 @@ def substep_P2G_updateGrid():
                 grid_color[base + offset] += weight * p_mass * colors[p]
 def substep_P2G():
     substep_P2G_calAffine()
-    print("substep_P2G_calAffine():", timer.tick())
     substep_P2G_updateGrid()
-    print("substep_P2G_updateGrid():", timer.tick())
 
 @ti.kernel
 def substep_updateGrid_v():
@@ -843,24 +842,17 @@ def substep_G2P():
 
 def substep(g_x: float, g_y: float, g_z: float):
     substep_rigidMove_updateVertices()
-    print("substep_rigidMove_updateVertices():", str(timer.tick()))
     substep_rigidMove_updateParticles()
-    print("substep_rigidMove_updateParticles():", str(timer.tick()))
     center[0] += dt * r_v * rigid_move[None]
 
     substep_CDF_initGrid()
-    print("substep_CDF_initGrid():", str(timer.tick()))
     substep_CDF_updateGrid()
-    print("substep_CDF_updateGrid():", str(timer.tick()))
 
     substep_CDF_updateParticle()
-    print("substep_CDF_updateParticle():", str(timer.tick()))
 
     substep_initGrid_vm()
-    print("substep_initGrid_vm():", str(timer.tick()))
 
     substep_P2G()
-    print("substep_P2G():", str(timer.tick()))
 
     fixed_y = (0.5 * inv_dx)
     fixed_z = (0.49 * inv_dx)
@@ -869,11 +861,9 @@ def substep(g_x: float, g_y: float, g_z: float):
     #         colors[p] = ti.Vector([1.0,0.0,0.0,1.0])
 
     substep_updateGrid_v()
-    print("substep_updateGrid_v():", str(timer.tick()))
 
     # ti.block_dim(n_grid)
     substep_G2P()
-    print("substep_G2P():", str(timer.tick()))
 
 
 
@@ -1029,23 +1019,23 @@ print("rigid_move[None] = ti.Vector([0.0, -2.0, 0.0]):", str(timer.tick()))
 
 print("start running...")
 while window.running:
+    print("======Frame=====")
+
+    timer.tick()
     compute_implicit_face()
-    print("compute_implicit_face():", str(timer.tick()))
     cal_ids_for_implict2explicit()
-    print("cal_ids_for_implict2explicit()", str(timer.tick()))
     implicit_to_explicit()
-    print("implicit_to_explicit():", str(timer.tick()))
     if not paused:
         for s in range(steps):
             substep(g_x, g_y, g_z)
-            print("substep(g_x, g_y, g_z):", str(timer.tick()))
+    print("Simulation:", timer.tick())
+
     render()
-    print("render():", str(timer.tick()))
     window.show()
-    print("window.show():", str(timer.tick()))
     if frame_id == 300:
         rigid_move[None] = ti.Vector([0.0, 0.0, 0.0])
     if frame_id == 550 :
         break
     frame_id += 1
     face_num[None] = 0
+    print("Render:", timer.tick())
