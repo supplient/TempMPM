@@ -102,6 +102,7 @@ diff_n_grid = 100
 diff_dx = 1 / diff_n_grid
 diff_inv_dx = float(diff_n_grid)
 signed_distance_field = ti.field(ti.f32, shape=(diff_n_grid, diff_n_grid, diff_n_grid))
+some_ids = ti.field(ti.int32, shape=(diff_n_grid, diff_n_grid, diff_n_grid)) # I don't know what these ids mean
 face_num = ti.field(int, shape=())
 et = ti.Vector.field(3, ti.i32, shape=256 * 4)
 table_path ="./MC_Table.txt"
@@ -281,9 +282,8 @@ def compute_face_vertice(i, j, k, edge):
             # result_color = ti.Vector([0.8,0.0,0.0,1.0])
     return result_pos, result_color
 
-
 @ti.kernel
-def implicit_to_explicit():
+def cal_ids_for_implict2explicit():
     for i, j, k in ti.ndrange(diff_n_grid - 1, diff_n_grid - 1, diff_n_grid - 1):
         id = 0
         if signed_distance_field[i, j, k] > 0:
@@ -302,8 +302,13 @@ def implicit_to_explicit():
             id |= 64
         if signed_distance_field[i, j + 1, k + 1] > 0:
             id |= 128
+        some_ids[i, j, k] = id
+
+@ti.kernel
+def implicit_to_explicit():
+    for i, j, k in ti.ndrange(diff_n_grid - 1, diff_n_grid - 1, diff_n_grid - 1):
         for ii in ti.static(range(4)):
-            temp = id * 4 + ii
+            temp = some_ids[i, j, k] * 4 + ii
             if et[temp][0] != -1:
                 # ti.ti_print(et[temp][0],et[temp][1],et[temp][2])
                 n = ti.atomic_add(face_num[None], 1)
@@ -1005,6 +1010,8 @@ print("start running...")
 while window.running:
     compute_implicit_face()
     print("compute_implicit_face():", str(timer.tick()))
+    cal_ids_for_implict2explicit()
+    print("cal_ids_for_implict2explicit()", str(timer.tick()))
     implicit_to_explicit()
     print("implicit_to_explicit():", str(timer.tick()))
     if not paused:
