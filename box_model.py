@@ -306,27 +306,26 @@ def cal_ids_for_implict2explicit():
 
 @ti.kernel
 def implicit_to_explicit():
-    for i, j, k in ti.ndrange(diff_n_grid - 1, diff_n_grid - 1, diff_n_grid - 1):
-        for ii in ti.static(range(4)):
-            temp = some_ids[i, j, k] * 4 + ii
-            if et[temp][0] != -1:
-                # ti.ti_print(et[temp][0],et[temp][1],et[temp][2])
-                n = ti.atomic_add(face_num[None], 1)
-                f1, color1 = compute_face_vertice(i, j, k, et[temp][0])
-                f2, color2 = compute_face_vertice(i, j, k, et[temp][1])
-                f3, color3 = compute_face_vertice(i, j, k, et[temp][2])
-                temp_index = n * 3
-                mc_vertices[temp_index] = f1
-                mc_vertices[temp_index + 1] = f2
-                mc_vertices[temp_index + 2] = f3
+    for ii, i, j, k in ti.ndrange(4, diff_n_grid - 1, diff_n_grid - 1, diff_n_grid - 1):
+        temp = some_ids[i, j, k] * 4 + ii
+        if et[temp][0] != -1:
+            # ti.ti_print(et[temp][0],et[temp][1],et[temp][2])
+            n = ti.atomic_add(face_num[None], 1)
+            f1, color1 = compute_face_vertice(i, j, k, et[temp][0])
+            f2, color2 = compute_face_vertice(i, j, k, et[temp][1])
+            f3, color3 = compute_face_vertice(i, j, k, et[temp][2])
+            temp_index = n * 3
+            mc_vertices[temp_index] = f1
+            mc_vertices[temp_index + 1] = f2
+            mc_vertices[temp_index + 2] = f3
 
-                per_mc_vertices_color[temp_index] = color1
-                per_mc_vertices_color[temp_index + 1] = color2
-                per_mc_vertices_color[temp_index + 2] = color3
+            per_mc_vertices_color[temp_index] = color1
+            per_mc_vertices_color[temp_index + 1] = color2
+            per_mc_vertices_color[temp_index + 2] = color3
 
-                mc_triangles[temp_index] = temp_index
-                mc_triangles[temp_index + 1] = temp_index + 1
-                mc_triangles[temp_index + 2] = temp_index + 2
+            mc_triangles[temp_index] = temp_index
+            mc_triangles[temp_index + 1] = temp_index + 1
+            mc_triangles[temp_index + 2] = temp_index + 2
 
 
 ###
