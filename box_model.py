@@ -618,18 +618,18 @@ def compute_particle_norm(particle_point):
     pass
 
 
+### 圆环下移
 @ti.kernel
-def substep(g_x: float, g_y: float, g_z: float):
-    ### 圆环下移
+def substep_rigidMove_updateVertices():
     for p in vertices:
         vertices[p] += dt * r_v * rigid_move[None]
+@ti.kernel
+def substep_rigidMove_updateParticles():
     for p in rigid_particles:
         rigid_particles[p] += dt * r_v * rigid_move[None]
-    # for p in cubetool:
-    #     cubetool[p] += dt * r_v * rigid_move[None]
-    center[0] += dt * r_v * rigid_move[None]
-
-    ### Grid CDF
+### Grid CDF
+@ti.kernel
+def substep_CDF_initGrid():
     for i, j, k in grid_A:
         grid_A[i, j, k] = 0
         grid_T[i, j, k] = 0
@@ -637,7 +637,8 @@ def substep(g_x: float, g_y: float, g_z: float):
         grid_surface[i, j, k] = -1
         grid_color[i, j, k] = ti.Vector([0.0, 0.0, 0.0, 0.0])
         grid_closest_distance[i, j, k] = 10
-
+@ti.kernel
+def substep_CDF_updateGrid():
     for p in rigid_particles:
         base = (rigid_particles[p] * inv_dx - 0.5).cast(int)
         for i, j, k in ti.static(ti.ndrange(kernel_size, kernel_size, kernel_size)):
@@ -655,8 +656,9 @@ def substep(g_x: float, g_y: float, g_z: float):
                         grid_T[base + offset] = 1
                     else:
                         grid_T[base + offset] = -1
-
-    ### Particle CDF
+### Particle CDF
+@ti.kernel
+def substep_CDF_updateParticle():
     for p in x:
         p_A[p] = 0
         p_T[p] = 0
@@ -682,11 +684,14 @@ def substep(g_x: float, g_y: float, g_z: float):
             else:
                 p_T[p] = -1
                 # colors[p] = ti.Vector([0.0,1.0,0.0,1.0])
-
+@ti.kernel
+def substep_initGrid_vm():
     for I in ti.grouped(grid_m):
         grid_v[I] = ti.zero(grid_v[I])
         grid_m[I] = 0
-    # ti.block_dim(n_grid)
+@ti.kernel
+def substep_P2G():
+    '''maybe P2G, not sure'''
     for p in x:
         if used[p] == 0:
             continue
@@ -746,12 +751,8 @@ def substep(g_x: float, g_y: float, g_z: float):
                 # temp11 = base + offset
                 # ti.ti_print(temp11)
                 # ti.ti_print(weight * colors[p])
-
-    fixed_y = (0.5 * inv_dx)
-    fixed_z = (0.49 * inv_dx)
-    # for p in x:
-    #     if x[p][1] > 0.27 and x[p][2] < 0.57:
-    #         colors[p] = ti.Vector([1.0,0.0,0.0,1.0])
+@ti.kernel
+def substep_updateGrid_v():
     for i, j, k in grid_m:
         if grid_m[i, j, k] > 0:
             grid_v[i, j, k] /= grid_m[i, j, k]
@@ -772,9 +773,9 @@ def substep(g_x: float, g_y: float, g_z: float):
         # if j > fixed_y and k < fixed_z:
         #     grid_v[i, j, k] = ti.Vector([0.0, 0.0, 0.0])
 
-    # ti.block_dim(n_grid)
-
-
+@ti.kernel
+def substep_G2P():
+    '''maybe G2P, not sure'''
     for p in x:
         if used[p] == 0:
             continue
@@ -819,6 +820,33 @@ def substep(g_x: float, g_y: float, g_z: float):
         # if fixed[p] == 0:
         x[p] += dt * v[p]
         C[p] = new_C
+
+def substep(g_x: float, g_y: float, g_z: float):
+    substep_rigidMove_updateVertices()
+    substep_rigidMove_updateParticles()
+    center[0] += dt * r_v * rigid_move[None]
+
+    substep_CDF_initGrid()
+    substep_CDF_updateGrid()
+
+    substep_CDF_updateParticle()
+
+    substep_initGrid_vm()
+
+    substep_P2G()
+
+    fixed_y = (0.5 * inv_dx)
+    fixed_z = (0.49 * inv_dx)
+    # for p in x:
+    #     if x[p][1] > 0.27 and x[p][2] < 0.57:
+    #         colors[p] = ti.Vector([1.0,0.0,0.0,1.0])
+
+    substep_updateGrid_v()
+
+    # ti.block_dim(n_grid)
+    substep_G2P()
+
+
 
 
 class CubeVolume:
