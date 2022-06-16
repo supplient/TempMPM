@@ -441,9 +441,12 @@ def init_texture():
         b = float(temp[2])
         cpu_texture[index_t] = [r, g, b, 1.0]
         index_t += 1
+    # Don't forget to close the file
+    f.close()
     
     # Then copy from CPU to GPU
     texture.from_numpy(cpu_texture)
+
 
 @ti.kernel
 def init_uv():
