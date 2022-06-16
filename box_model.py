@@ -1,6 +1,9 @@
 import taichi as ti
 import numpy as np
 
+from MySimpleTimer import MySimpleTimer
+timer = MySimpleTimer()
+
 arch = ti.vulkan if ti._lib.core.with_vulkan() else ti.cuda
 ti.init(arch)
 # ti.init(arch=ti.gpu,device_memory_GB=4)
@@ -29,6 +32,7 @@ nu = 0.3  # Poisson's ratio
 mu_0, lambda_0 = E / (2 * (1 + nu)), E * nu / ((1 + nu) * (1 - 2 * nu))  # Lame parameters
 
 x = ti.Vector.field(dim, ti.f32, n_particles)
+affines = ti.Matrix.field(dim, dim, ti.f32, n_particles)
 fixed = ti.field(ti.i16, n_particles)
 v = ti.Vector.field(dim, float, n_particles)
 C = ti.Matrix.field(dim, dim, float, n_particles)
@@ -643,23 +647,22 @@ def substep_CDF_initGrid():
         grid_closest_distance[i, j, k] = 10
 @ti.kernel
 def substep_CDF_updateGrid():
-    for p in rigid_particles:
+    for i, j, k, p in ti.ndrange(kernel_size, kernel_size, kernel_size, n_triangles):
         base = (rigid_particles[p] * inv_dx - 0.5).cast(int)
-        for i, j, k in ti.static(ti.ndrange(kernel_size, kernel_size, kernel_size)):
-            offset = ti.Vector([i, j, k])
-            grid_node = (offset + base).cast(float) * dx
-            plane_normal = compute_plane_normal(p)
-            proj_point = compute_proj_point(p, plane_normal, grid_node)
-            if is_valid(p, proj_point):
-                grid_A[base + offset] = 1
-                distance = compute_distance(grid_node, proj_point)
-                if grid_surface[base + offset] == -1 or grid_d[base + offset] > distance:
-                    grid_d[base + offset] = distance
-                    grid_surface[base + offset] = p
-                    if compute_grid_T(plane_normal, grid_node, proj_point, p) == True:
-                        grid_T[base + offset] = 1
-                    else:
-                        grid_T[base + offset] = -1
+        offset = ti.Vector([i, j, k])
+        grid_node = (offset + base).cast(float) * dx
+        plane_normal = compute_plane_normal(p)
+        proj_point = compute_proj_point(p, plane_normal, grid_node)
+        if is_valid(p, proj_point):
+            grid_A[base + offset] = 1
+            distance = compute_distance(grid_node, proj_point)
+            if grid_surface[base + offset] == -1 or grid_d[base + offset] > distance:
+                grid_d[base + offset] = distance
+                grid_surface[base + offset] = p
+                if compute_grid_T(plane_normal, grid_node, proj_point, p) == True:
+                    grid_T[base + offset] = 1
+                else:
+                    grid_T[base + offset] = -1
 ### Particle CDF
 @ti.kernel
 def substep_CDF_updateParticle():
@@ -693,9 +696,11 @@ def substep_initGrid_vm():
     for I in ti.grouped(grid_m):
         grid_v[I] = ti.zero(grid_v[I])
         grid_m[I] = 0
+
+
 @ti.kernel
-def substep_P2G():
-    '''maybe P2G, not sure'''
+def substep_P2G_calAffine():
+    '''maybe calAffine, not sure'''
     for p in x:
         if used[p] == 0:
             continue
@@ -732,7 +737,21 @@ def substep_P2G():
         stress = 2 * mu * (F[p] - U @ V.transpose()) @ F[p].transpose() + ti.Matrix.identity(float, 3) * la * J * (
             J - 1)
         stress = (-dt * p_vol * 4) * stress / dx ** 2
-        affine = stress + p_mass * C[p]
+        affines[p] = stress + p_mass * C[p]
+@ti.kernel
+def substep_P2G_updateGrid():
+    '''maybe P2G, not sure'''
+    for p in x:
+        if used[p] == 0:
+            continue
+        Xp = x[p] / dx
+        base = int(Xp - 0.5)
+        fx = Xp - base
+        w = [
+            0.5 * (1.5 - fx) ** 2,
+            0.75 - (fx - 1) ** 2,
+            0.5 * (fx - 0.5) ** 2,
+        ]
 
         for offset in ti.static(ti.grouped(ti.ndrange(*neighbour))):
             if p_T[p] * grid_T[base + offset] == -1:
@@ -743,18 +762,15 @@ def substep_P2G():
                 for i in ti.static(range(dim)):
                     weight *= w[offset[i]][i]
 
-                grid_v[base + offset] += weight * (p_mass * v[p] + affine @ dpos)
+                grid_v[base + offset] += weight * (p_mass * v[p] + affines[p] @ dpos)
                 grid_m[base + offset] += weight * p_mass
                 grid_color[base + offset] += weight * p_mass * colors[p]
-            # gpdis = (x[p] - (base + offset) * dx).norm()
-            # if gpdis < grid_closest_distance[base + offset]:
-            #     grid_closest_distance[base + offset] = gpdis
-            #     grid_color[base + offset] = colors[p]
-                # grid_closest_particle = p
-                # grid_color[base + offset] += colors[p]
-                # temp11 = base + offset
-                # ti.ti_print(temp11)
-                # ti.ti_print(weight * colors[p])
+def substep_P2G():
+    substep_P2G_calAffine()
+    print("substep_P2G_calAffine():", timer.tick())
+    substep_P2G_updateGrid()
+    print("substep_P2G_updateGrid():", timer.tick())
+
 @ti.kernel
 def substep_updateGrid_v():
     for i, j, k in grid_m:
@@ -827,17 +843,24 @@ def substep_G2P():
 
 def substep(g_x: float, g_y: float, g_z: float):
     substep_rigidMove_updateVertices()
+    print("substep_rigidMove_updateVertices():", str(timer.tick()))
     substep_rigidMove_updateParticles()
+    print("substep_rigidMove_updateParticles():", str(timer.tick()))
     center[0] += dt * r_v * rigid_move[None]
 
     substep_CDF_initGrid()
+    print("substep_CDF_initGrid():", str(timer.tick()))
     substep_CDF_updateGrid()
+    print("substep_CDF_updateGrid():", str(timer.tick()))
 
     substep_CDF_updateParticle()
+    print("substep_CDF_updateParticle():", str(timer.tick()))
 
     substep_initGrid_vm()
+    print("substep_initGrid_vm():", str(timer.tick()))
 
     substep_P2G()
+    print("substep_P2G():", str(timer.tick()))
 
     fixed_y = (0.5 * inv_dx)
     fixed_z = (0.49 * inv_dx)
@@ -846,9 +869,11 @@ def substep(g_x: float, g_y: float, g_z: float):
     #         colors[p] = ti.Vector([1.0,0.0,0.0,1.0])
 
     substep_updateGrid_v()
+    print("substep_updateGrid_v():", str(timer.tick()))
 
     # ti.block_dim(n_grid)
     substep_G2P()
+    print("substep_G2P():", str(timer.tick()))
 
 
 
@@ -979,9 +1004,6 @@ def render():
     scene.point_light(pos=(0.5, 1.0, 1.8), color=(0.2, 0.2, 0.2))
     canvas.scene(scene)
 
-
-from MySimpleTimer import MySimpleTimer
-timer = MySimpleTimer()
 
 timer.tick()
 init_mytool()
