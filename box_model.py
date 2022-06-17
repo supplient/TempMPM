@@ -15,7 +15,7 @@ steps = 5
 dt = 2e-4
 
 # n_particles = 100000
-n_particles = 10000
+n_particles = 30000
 print(n_particles)
 
 dx = 1 / n_grid
@@ -59,9 +59,9 @@ SNOW = 2
 BLOOD = 3
 
 n_vertices_col = 18
-n_verticles_row = 3
-n_vertices = n_verticles_row * n_vertices_col
-n_triangles = 2 * n_vertices_col * (n_verticles_row - 1)
+n_vertices_row = 3
+n_vertices = n_vertices_row * n_vertices_col
+n_triangles = 2 * n_vertices_col * (n_vertices_row - 1)
 vertices = ti.Vector.field(dim, ti.f32, n_vertices)
 indices = ti.field(ti.i32, 3 * n_triangles)
 color = (0.0, 0.0, 2.0)
@@ -469,8 +469,7 @@ def init_uv():
         colors[p] = texture[v * n_texture + u]
         # colors[p] = ti.Vector([1.0,0.0,0.0,1.0])
 
-@ti.kernel
-def init_mytool():
+def draw_circleTool():
     center[0] = ti.Vector([0.48, 0.68, 0.48])
     phi = 8.0 / 14.0 * PI
     for j in range(n_vertices_col):
@@ -506,10 +505,27 @@ def init_mytool():
     per_vertice_color[0] = ti.Vector([1.0, 0.0, 0.0, 1.0])
     per_vertice_color[2 * n_vertices_col - 1] = ti.Vector([0.0, 0.0, 1.0, 1.0])
 
+# @ti.func
+def draw_rectTool():
+    start_z = -0.3
+    end_z = 0.6
+    start_y = 0.6
+    end_y = 0.63
+
+    x = 0.4
+    for ri in range(n_vertices_row):
+        y = start_y + ri * (end_y-start_y)/(n_vertices_row-1)
+        for ci in range(n_vertices_col):
+            z = start_z + ci * (end_z-start_z)/(n_vertices_col-1)
+            vertices[ri * n_vertices_col + ci] = ti.Vector([x, y, z])
+
+# @ti.kernel
+def init_mytool():
+    draw_rectTool()
 
 def init_triangle():
     n_f = 0
-    for i in range(n_verticles_row - 1):
+    for i in range(n_vertices_row - 1):
         temp = i * n_vertices_col
         for j in range(n_vertices_col - 1):
             indices[n_f] = temp + j
