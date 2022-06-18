@@ -15,7 +15,7 @@ steps = 5
 dt = 2e-4
 
 # n_particles = 100000
-n_particles = 30000
+n_particles = 50000
 print(n_particles)
 
 dx = 1 / n_grid
@@ -62,6 +62,10 @@ n_vertices_col = 18
 n_vertices_row = 3
 n_vertices = n_vertices_row * n_vertices_col
 n_triangles = 2 * n_vertices_col * (n_vertices_row - 1)
+
+n_vertices = 14
+n_triangles = 12
+
 vertices = ti.Vector.field(dim, ti.f32, n_vertices)
 indices = ti.field(ti.i32, 3 * n_triangles)
 color = (0.0, 0.0, 2.0)
@@ -73,6 +77,7 @@ mytool_radius = 0.08
 kh = 0.5
 r_v = 1.5
 rigid_move = ti.Vector.field(dim, ti.f32, shape=())
+surface_norm = ti.Vector.field(dim,ti.f32,shape=n_triangles)
 
 grid_d = ti.field(dtype=float, shape=(n_grid, n_grid, n_grid))
 grid_A = ti.field(dtype=int, shape=(n_grid, n_grid, n_grid))
@@ -119,6 +124,9 @@ mc_triangles = ti.field(ti.i32, shape=15 * diff_n_grid ** 3)
 diff_node_pos = ti.Vector.field(dim, ti.f32, shape=diff_n_grid ** 3)
 per_diff_node_color = ti.Vector.field(dim, ti.f32, shape=diff_n_grid ** 3)
 
+
+closest_surface = ti.field(ti.i32,shape=n_triangles)
+particle_surface = ti.field(ti.i32,shape=n_particles)
 
 # @ti.kernel
 # def init_particles():
@@ -521,7 +529,62 @@ def draw_rectTool():
 
 # @ti.kernel
 def init_mytool():
-    draw_rectTool()
+    start_z = 0.1
+    end_z = 0.53
+    start_y = 0.5
+    end_y = 0.55
+    x = 0.4
+    vertices[0] = ti.Vector([x,start_y,start_z])
+    vertices[1] = ti.Vector([x, start_y, 0.17])
+    vertices[2] = ti.Vector([x,start_y,0.24])
+    vertices[3] = ti.Vector([x, start_y, 0.31])
+    vertices[4] = ti.Vector([x, start_y, 0.38])
+    vertices[5] = ti.Vector([x, start_y, 0.45])
+    vertices[6] = ti.Vector([x,start_y,end_z])
+    vertices[7] = ti.Vector([x,end_y,start_z])
+    vertices[8] = ti.Vector([x, end_y, 0.17])
+    vertices[9] = ti.Vector([x,end_y,0.24])
+    vertices[10] = ti.Vector([x,end_y, 0.31])
+    vertices[11] = ti.Vector([x, end_y, 0.38])
+    vertices[12] = ti.Vector([x, end_y, 0.45])
+    vertices[13] = ti.Vector([x,end_y,end_z])
+
+    indices[0] = 0
+    indices[1] = 1
+    indices[2] = 8
+    indices[3] = 1
+    indices[4] = 2
+    indices[5] = 9
+    indices[6] = 2
+    indices[7] = 3
+    indices[8] = 10
+    indices[9] = 3
+    indices[10] = 4
+    indices[11] = 11
+    indices[12] = 4
+    indices[13] = 5
+    indices[14] = 12
+    indices[15] = 5
+    indices[16] = 6
+    indices[17] = 13
+    indices[18] = 0
+    indices[19] = 8
+    indices[20] = 7
+    indices[21] = 1
+    indices[22] = 9
+    indices[23] = 8
+    indices[24] = 2
+    indices[25] = 10
+    indices[26] = 9
+    indices[27] = 3
+    indices[28] = 11
+    indices[29] = 10
+    indices[30] = 4
+    indices[31] = 12
+    indices[32] = 11
+    indices[33] = 5
+    indices[34] = 13
+    indices[35] = 12
 
 def init_triangle():
     n_f = 0
@@ -669,6 +732,7 @@ def substep_CDF_updateGrid():
         offset = ti.Vector([i, j, k])
         grid_node = (offset + base).cast(float) * dx
         plane_normal = compute_plane_normal(p)
+        surface_norm[p] = plane_normal
         proj_point = compute_proj_point(p, plane_normal, grid_node)
         if is_valid(p, proj_point):
             grid_A[base + offset] = 1
@@ -687,6 +751,7 @@ def substep_CDF_updateParticle():
         p_A[p] = 0
         p_T[p] = 0
         p_d[p] = 0.0
+        particle_surface[p] = -1
 
         base = (x[p] * inv_dx - 0.5).cast(int)
         fx = x[p] * inv_dx - base.cast(float)
@@ -697,6 +762,8 @@ def substep_CDF_updateParticle():
             offset = ti.Vector([i, j, k])
             if grid_A[base + offset] == 1:
                 p_A[p] = 1
+                surface = grid_surface[base + offset]
+                closest_surface[surface] += 1
             weight = w[i][0] * w[j][1] * w[k][2]
             Tpr += weight * grid_d[base + offset] * grid_T[base + offset]
         p_d[p] = abs(Tpr)
@@ -708,6 +775,15 @@ def substep_CDF_updateParticle():
             else:
                 p_T[p] = -1
                 # colors[p] = ti.Vector([0.0,1.0,0.0,1.0])
+            max = -1
+            max_surface = -1
+            for i in ti.ndrange(n_triangles):
+                if closest_surface[i] > max:
+                    max = closest_surface[i]
+                    max_surface = i
+            particle_surface[p] = max_surface
+        
+        
 @ti.kernel
 def substep_initGrid_vm():
     for I in ti.grouped(grid_m):
@@ -821,21 +897,20 @@ def substep_G2P():
         new_v = ti.zero(v[p])
         new_C = ti.zero(C[p])
 
-        cp = x[p] - center[0]
-        np = cp.normalized() * p_T[p]
+#         cp = x[p] - center[0]
+#         np = cp.normalized() * p_T[p]
+        surface = particle_surface[p]
+        np = surface_norm[surface]
 
         for offset in ti.static(ti.grouped(ti.ndrange(*neighbour))):
             g_v = ti.Vector([0.0, 0.0, 0.0])
             if p_T[p] * grid_T[base + offset] == -1:
                 sg = v[p].dot(np)
-                if sg > 0:
+                if (sg > 0 and p_T[p] > 0) or (sg < 0 and p_T[p] < 0):
                     g_v = v[p]
                 else:
                     g_v = v[p] - v[p].dot(np) * np
-                if p_T[p] * p_d[p] > 0:
-                    # g_v += np * (5 * dx - abs(p_d[p])) * 15
-                    g_v += np * 2
-                materials[p] = BLOOD
+                g_v += p_T[p] * np * 15
                 # colors[p] = ti.Vector([0.0,0.0,1.0,1.0])
             else:
                 g_v = grid_v[base + offset]
@@ -848,9 +923,9 @@ def substep_G2P():
             new_C += 4 * weight * g_v.outer_product(dpos) / dx ** 2
 
         v[p] = new_v
-        if p_A[p] and p_T[p] * p_d[p] < 0:
-            f_penalty = - kh * np * p_d[p] * 5 * p_T[p]
-            v[p] += dt * f_penalty / p_mass
+#         if p_A[p] and p_T[p] * p_d[p] < 0:
+#             f_penalty = - kh * np * p_d[p] * 5 * p_T[p]
+#             v[p] += dt * f_penalty / p_mass
 
         # if fixed[p] == 0:
         x[p] += dt * v[p]
@@ -999,12 +1074,12 @@ def render():
 
     colors_used = colors_random if use_random_colors else colors
     # scene.particles(x, per_vertex_color=colors, radius=particles_radius)
-    # scene.particles(x, per_vertex_color=colors, radius=particles_radius)
+    scene.particles(x, per_vertex_color=colors, radius=particles_radius)
 
     scene.mesh(vertices=vertices, indices=indices, color=(0.75, 0.75, 0.75, 1.0), two_sided=True)
     # scene.mesh(cubetool, cubetool_f, color=(0.75, 0.75, 0.75, 1.0), two_sided=True)
 
-    scene.mesh(vertices=mc_vertices, indices=mc_triangles, per_vertex_color=per_mc_vertices_color)
+#     scene.mesh(vertices=mc_vertices, indices=mc_triangles, per_vertex_color=per_mc_vertices_color)
 
     scene.point_light(pos=(0.5, 1.5, 0.5), color=(0.2, 0.2, 0.2))
     scene.point_light(pos=(0.5, 1.0, 1.8), color=(0.2, 0.2, 0.2))
@@ -1014,8 +1089,8 @@ def render():
 timer.tick()
 init_mytool()
 print("init_mytool():", str(timer.tick()))
-init_triangle()
-print("init_triangle():", str(timer.tick()))
+# init_triangle()
+# print("init_triangle():", str(timer.tick()))
 init_rigid_particles()
 print("init_rigid_particles():", str(timer.tick()))
 
@@ -1038,9 +1113,9 @@ while window.running:
     print("======Frame=====")
 
     timer.tick()
-    compute_implicit_face()
-    cal_ids_for_implict2explicit()
-    implicit_to_explicit()
+#     compute_implicit_face()
+#     cal_ids_for_implict2explicit()
+#     implicit_to_explicit()
     if not paused:
         for s in range(steps):
             substep(g_x, g_y, g_z)
@@ -1050,7 +1125,7 @@ while window.running:
     window.show()
     if frame_id == 300:
         rigid_move[None] = ti.Vector([0.0, 0.0, 0.0])
-    if frame_id == 550 :
+    if frame_id == 250 :
         break
     frame_id += 1
     face_num[None] = 0
