@@ -1111,7 +1111,7 @@ print("rigid_move[None] = ti.Vector([0.0, -2.0, 0.0]):", str(timer.tick()))
 print("start running...")
 first_flag = True
 while window.running:
-    print("======Frame=====")
+    # print("======Frame=====")
 
     timer.tick()
 #     compute_implicit_face()
@@ -1120,7 +1120,8 @@ while window.running:
     if not paused:
         for s in range(steps):
             substep(g_x, g_y, g_z)
-    print("Simulation:", timer.tick())
+    # print("Simulation:", timer.tick())
+    print(timer.tick())
 
     render()
     window.show()
@@ -1130,7 +1131,7 @@ while window.running:
         break
     frame_id += 1
     face_num[None] = 0
-    print("Render:", timer.tick())
+    # print("Render:", timer.tick())
 
     if first_flag:
         first_flag = False
