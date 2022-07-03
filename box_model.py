@@ -10,7 +10,7 @@ ti.init(arch)
 # ti.init(ti.gpu)
 
 dim = 3
-n_grid = 100
+n_grid = 80
 steps = 5
 dt = 2e-4
 
@@ -1109,6 +1109,7 @@ rigid_move[None] = ti.Vector([0.0, -2.0, 0.0])
 print("rigid_move[None] = ti.Vector([0.0, -2.0, 0.0]):", str(timer.tick()))
 
 print("start running...")
+first_flag = True
 while window.running:
     print("======Frame=====")
 
@@ -1125,8 +1126,12 @@ while window.running:
     window.show()
     if frame_id == 300:
         rigid_move[None] = ti.Vector([0.0, 0.0, 0.0])
-    if frame_id == 250 :
+    if frame_id == 550 :
         break
     frame_id += 1
     face_num[None] = 0
     print("Render:", timer.tick())
+
+    if first_flag:
+        first_flag = False
+        input()
