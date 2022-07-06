@@ -1,7 +1,9 @@
 import taichi as ti
 import numpy as np
 
+from ParticleFileInterface import ParticleFileInterface
 from MySimpleTimer import MySimpleTimer
+
 timer = MySimpleTimer()
 
 arch = ti.vulkan if ti._lib.core.with_vulkan() else ti.cuda
@@ -15,7 +17,7 @@ steps = 5
 dt = 2e-4
 
 # n_particles = 100000
-n_particles = 50000
+n_particles = 5000
 print(n_particles)
 
 dx = 1 / n_grid
@@ -1108,6 +1110,9 @@ print("read_MCTable():", str(timer.tick()))
 rigid_move[None] = ti.Vector([0.0, -2.0, 0.0])
 print("rigid_move[None] = ti.Vector([0.0, -2.0, 0.0]):", str(timer.tick()))
 
+enable_export = False
+particleFile = ParticleFileInterface()
+
 print("start running...")
 first_flag = True
 while window.running:
@@ -1123,11 +1128,19 @@ while window.running:
     # print("Simulation:", timer.tick())
     print(timer.tick())
 
+    if enable_export:
+        if frame_id < 150:
+            particleFile.PushFrame(x, x.shape[0])
+        elif frame_id == 150:
+            print("Exporting ParticleFile into particle.pf...")
+            particleFile.Export("particle.pf")
+            print("Export succeed.")
+
     render()
     window.show()
     if frame_id == 300:
         rigid_move[None] = ti.Vector([0.0, 0.0, 0.0])
-    if frame_id == 550 :
+    elif frame_id == 550 :
         break
     frame_id += 1
     face_num[None] = 0
